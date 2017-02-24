@@ -38,9 +38,10 @@ values."
      ;; ----------------------------------------------------------------
      auto-completion
      bibtex
-     ;; (c-c++ :variables c-c++-enable-clang-support t)
+     (c-c++ :variables c-c++-enable-clang-support t)
      better-defaults
      emacs-lisp
+     octave
      git
      helm
      html
@@ -60,6 +61,9 @@ values."
      systemd
      (version-control :variables version-control-diff-tool 'diff-hl)
 
+     mu4e
+
+
      ;; Personal config layers
      paw-python
      paw-func
@@ -69,7 +73,7 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
-   '(helm-flycheck multiple-cursors)
+   '(helm-flycheck helm-ag multiple-cursors)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -320,6 +324,10 @@ before packages are loaded. If you are unsure, you should try in setting them in
 
   ;; Shell
   ;; shell-default-term-shell "/bin/zsh"
+  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+  (setq-default dotspacemacs-configuration-layers
+              '((mu4e :variables
+                      mu4e-installation-path "/usr/share/emacs/site-lisp")))
   )
 
 (defun dotspacemacs/user-config ()
@@ -330,11 +338,66 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
-  ;; use helm for searching in history
-  (define-key comint-mode-map (kbd "M-r") 'helm-comint-input-ring)
+  ;; Flycheck and clang arugments for syntax checking in C/C++
+  (add-hook 'c++-mode-hook
+            (lambda ()
+              (setq flycheck-clang-language-standard "c++11")
+              (setq company-clang-arguments '("-Weverything"))
+              (setq company-c-headers-path-user '("../include" "./include" "." "../../include" "../inc" "../../inc"))
+              ;;(setq company-c-headers-path-system '("C:/cygwin64/lib/gcc/x86_64-pc-cygwin/5.4.0/include/c++"))
+              (setq flycheck-clang-include-path '("../include" "./include" "." "../../include" "../inc" "../../inc"))))
+  (add-hook 'c-mode-hook
+            (lambda ()
+              (setq flycheck-clang-language-standard "gnu99")
+              (setq company-clang-arguments '("-Weverything"))
+              (setq company-c-headers-path-user '("../include" "./include" "." "../../include" "../inc" "../../inc"))
+              ;;(setq company-c-headers-path-system '("C:/cygwin64/lib/gcc/x86_64-pc-cygwin/5.4.0/include"))
+              (setq flycheck-clang-include-path '("../include" "./include" "." "../../include" "../inc" "../../inc"))))
+
+  ;; Scroll compilation output to first error
+  (setq compilation-scroll-output t)
+  (setq compilation-scroll-output #'first-error)
+
+  ;; Make the compilation window close automatically if no errors
+  (setq compilation-finish-functions
+        (lambda (buf str)
+          (if (null (string-match ".*exited abnormally.*" str))
+              (progn
+                (run-at-time
+                 "1 sec" nil 'delete-windows-on
+                 (get-buffer-create "*compilation*"))
+                (message "No Compilation Errors")))))
+
+  ;; Stop python from complaining when opening a REPL
+  (setq python-shell-prompt-detect-failure-warning nil)
+
+  ;; No need for these in the modeline
+  (spacemacs|diminish ggtags-mode)
+  (spacemacs|diminish which-key-mode)
+  (spacemacs|diminish helm-gtags-mode)
+  (spacemacs|diminish spacemacs-whitespace-cleanup-mode)
+
+  ;; Start all frames maximized
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
   ;; Miscellaneous
   (add-hook 'text-mode-hook 'auto-fill-mode)
+  (add-hook 'python-mode-hook 'auto-fill-mode)
+
+  ;; (define-key evil-normal-state-map (kbd "C-j")
+  (define-key evil-emacs-state-map (kbd "C-j")
+    (lambda ()
+      (interactive)
+      (call-interactively 'spacemacs/evil-insert-line-below)
+      (evil-next-line)
+      (indent-according-to-mode)))
+
+  (global-set-key (kbd "C-x b") 'helm-mini)
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+  ;; use helm for searching in history
+  (define-key comint-mode-map (kbd "M-r") 'helm-comint-input-ring)
+
   ;; (add-hook 'text-mode-hook 'typo-mode)
   (add-hook 'makefile-mode-hook 'whitespace-mode)
   (remove-hook 'prog-mode-hook 'spacemacs//show-trailing-whitespace)
@@ -345,21 +408,9 @@ you should place your code here."
     (spacemacs/set-leader-keys "ee" 'helm-flycheck))
 
   (when window-system (global-unset-key "\C-z"))
-  (define-key undo-tree-map (kbd "C-z") 'undo-tree-undo)
-  (define-key undo-tree-map (kbd "C-S-z") 'undo-tree-redo)
+  (define-key evil-emacs-state-map (kbd "C-z") 'undo-tree-undo)
+  (define-key evil-emacs-state-map (kbd "C-S-z") 'undo-tree-redo)
 
-  ;; kill-ring menu
-  (global-set-key "\C-cy" '(lambda ()
-                             (interactive)
-                             (popup-menu 'yank-menu)))
-
-  ;; (define-key evil-normal-state-map (kbd "C-j")
-  (define-key evil-emacs-state-map (kbd "C-j")
-    (lambda ()
-      (interactive)
-      (call-interactively 'spacemacs/evil-insert-line-below)
-      (evil-next-line)
-      (indent-according-to-mode)))
 
   ;; Open tags in another buffer
   (global-set-key (kbd "M-:") 'my-goto-tag-other-window)
@@ -386,7 +437,114 @@ you should place your code here."
   ;; (global-set-key (kbd "C->") 'evil-mc-make-and-goto-next-match)
 
 
-  )
+(setq
+ ;; set mu4e as default mail client
+ mail-user-agent 'mu4e-user-agent
+ ;; root mail directory - can't be switched
+ ;; with context, can only be set once
+ mu4e-maildir "~/.mail"
+ mu4e-attachments-dir "~/Downloads/Attachments"
+ ;; update command
+ ;;mu4e-get-mail-command "mbsync -q -a"
+
+ ;; mu4e-get-mail-command "mbsync -q dtu:Inbox gmail:Inbox"
+ ;; update database every seven minutes
+ mu4e-update-interval (* 60 7)
+ ;; use smtpmail (bundled with emacs) for sending
+ message-send-mail-function 'smtpmail-send-it
+ ;; optionally log smtp output to a buffer
+ smtpmail-debug-info t
+ ;; close sent message buffers
+ message-kill-buffer-on-exit t
+ ;; customize list columns
+ mu4e-headers-fields '((:flags . 4)
+                       (:from . 20)
+                       (:human-date . 10)
+                       (:subject))
+ mu4e-show-images t
+ mu4e-html2text-command "w3m -T text/html"
+ ;; for mbsync
+ mu4e-change-filenames-when-moving t
+ ;; pick first context automatically on launch
+ mu4e-context-policy               'pick-first
+ ;; use current context for new mail
+ mu4e-compose-context-policy       nil
+ mu4e-confirm-quit                 nil
+
+ )
+
+;; mu4e context for each IMAP Account
+(with-eval-after-load 'mu4e
+  ;; In mu4e, deleting [d] a file will not only move the file to the Trash, but
+  ;; it will also set the trashed flag; thus servers are likely to delete them
+  ;; automatically. The following binds the d key to just the move action.
+  ;; (fset 'mu4e-move-to-trash "mt")
+  ;; (define-key mu4e-headers-mode-map (kbd "d") 'mu4e-move-to-trash)
+  ;; (define-key mu4e-view-mode-map (kbd "d") 'mu4e-move-to-trash)
+
+(setq mu4e-contexts
+      `(
+        ,(make-mu4e-context
+          :name "gmail"
+          :match-func (lambda(msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "pawsen@gmail.com")))
+          :vars '(
+                  (mu4e-get-mail-command . "mbsync -q gmail:inbox")
+                  (mu4e-sent-folder . "/gmail/[Gmail]/.Sent Mail")
+                  (mu4e-drafts-folder . "/gmail/[Gmail]/.Drafts")
+                  (mu4e-trash-folder . "/gmail/[Gmail]/.Trash")
+                  (mu4e-refile-folder . "/gmail/[Gmail]/.All Mail")
+                  ;;(mu4e-inbox-folder . "/gmail/Inbox")
+                  ;;(mu4e-sent-folder .  "/gmail/sent")
+                  ;;(mu4e-trash-folder . "/gmail/trash")
+                  ;; account details
+                  (user-mail-address . "pawsen@gmail.com")
+                  (user-full-name . "Paw")
+                  (mu4e-user-mail-address-list . ( "pawsen@gmail.com" ))
+                  ;;(mu4e-mu-home . "~/.mu-gmail")
+                  ;; gmail saves every outgoing message automatically
+                  (mu4e-sent-messages-behavior . delete)
+                  (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
+                                             ("/gmail/[Gmail]/.All Mail" . ?a)
+                                             ("/gmail/[Gmail]/.Trash" . ?t)
+                                             ("/gmail/[Gmail]/.Drafts" . ?d)))
+                  ;; (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
+                  ;;                            ("/gmail/all" . ?a)
+                  ;;                            ("/gmail/trash" . ?t)
+                  ;;                            ("/gmail/drafts" . ?d)))
+                  ;; outbound mail server
+                  (smtpmail-smtp-server . "smtp.gmail.com")
+                  (smtpmail-smtp-service . 465)
+                  (smtpmail-stream-type . ssl)
+                  ;; the All Mail folder has a copy of every other folder's
+                  ;; contents, and duplicates search results, which is confusing
+                  (mue4e-headers-skip-duplicates . t)
+                  ))
+        ,(make-mu4e-context
+          :name "dtu"
+          :match-func (lambda(msg)
+                        (when msg
+                          (mu4e-message-contact-field-matches msg :to "s082705@student.dtu.dk")))
+        :vars '(
+                (mu4e-sent-folder . "/dtu/Sent Items")
+                (mu4e-drafts-folder . "/dtu/Drafts")
+                (mu4e-trash-folder . "/dtu/Trash")
+                (user-mail-address . "s082705@student.dtu.dk")
+                (user-full-name . "Paw")
+                ;;(mu4e-mu-home . "~/.mu-dtu")
+                (mu4e-user-mail-address-list . ( "s082705@student.dtu.dk" ))
+                (mu4e-get-mail-command . "mbsync -q dtu:Inbox")
+                (mu4e-maildir-shortcuts . (("/dtu/Inbox" . ?j)
+                                           ;;("/dtu/all" . ?a)
+                                           ("/dtu/Trash" . ?t)
+                                           ("/dtu/Drafts" . ?d)))
+                ;; outbound mail server
+                (smtpmail-smtp-server . "smtp.student.dtu.dk")
+                (smtpmail-smtp-service . 465)
+                (smtpmail-stream-type . ssl)
+                )))
+      )))
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -398,7 +556,7 @@ you should place your code here."
  '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
    (quote
-    (mwim yapfify ws-butler window-numbering which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org tagedit systemd spacemacs-theme spaceline powerline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox spinner orgit org-ref key-chord ivy org-projectile pcache org-present org org-pomodoro alert log4e gntp org-plus-contrib org-download org-bullets open-junk-file neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lua-mode lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint less-css-mode json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc insert-shebang info+ indent-guide ido-vertical-mode hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make projectile helm-gitignore request helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-bibtex parsebib helm-ag haml-mode google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck pkg-info epl flx-ido flx fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight emmet-mode elisp-slime-nav dumb-jump drupal-mode php-mode diminish diff-hl define-word cython-mode company-web web-completion-data company-tern dash-functional tern company-statistics company-shell company-auctex company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key biblio biblio-core auto-yasnippet yasnippet auto-highlight-symbol auto-dictionary auto-compile packed auctex-latexmk auctex anaconda-mode pythonic f dash s aggressive-indent adaptive-wrap quelpa monokai-theme ace-window ace-link ace-jump-helm-line ac-ispell))))
+    (mu4e-maildirs-extension mu4e-alert ht mwim yapfify ws-butler window-numbering which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org tagedit systemd spacemacs-theme spaceline powerline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox spinner orgit org-ref key-chord ivy org-projectile pcache org-present org org-pomodoro alert log4e gntp org-plus-contrib org-download org-bullets open-junk-file neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lua-mode lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint less-css-mode json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc insert-shebang info+ indent-guide ido-vertical-mode hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make projectile helm-gitignore request helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-bibtex parsebib helm-ag haml-mode google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck pkg-info epl flx-ido flx fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight emmet-mode elisp-slime-nav dumb-jump drupal-mode php-mode diminish diff-hl define-word cython-mode company-web web-completion-data company-tern dash-functional tern company-statistics company-shell company-auctex company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key biblio biblio-core auto-yasnippet yasnippet auto-highlight-symbol auto-dictionary auto-compile packed auctex-latexmk auctex anaconda-mode pythonic f dash s aggressive-indent adaptive-wrap quelpa monokai-theme ace-window ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

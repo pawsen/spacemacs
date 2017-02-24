@@ -28,7 +28,7 @@ mentioned var nil."
         (let ((process (get-buffer-process (current-buffer))))
           (when process
             (setq comint-input-ring-file-name
-                  (format "~/.emacs.d/inferior-%s-history"
+                  (format "~/.emacs.d/.cache/inferior-%s-history"
                           (process-name process)))
             (comint-read-input-ring)
             (set-process-sentinel process
