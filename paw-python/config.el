@@ -3,6 +3,8 @@
 ;; (define-key yas-minor-mode-map (kbd "TAB") nil)
 ;; (define-key yas-minor-mode-map (kbd "<backtab>") 'yas-expand)
 
+
+
 (defvar python-fill-column 80
   "Fill column value for python buffers")
 
@@ -17,3 +19,10 @@
 ;; max-line-length = 160
 ;; exclude = tests/*
 ;; max-complexity = 10
+
+;; create db for pylookup:
+;; sudo apt-get install python3-doc python-numpy-doc python-scipy-doc python-matplotlib-doc
+;; cd ~/.emacs.d/layers/+lang/python/local/pylookup
+;; ./pylookup.py -u /usr/share/doc/python-scipy-doc/html/genindex.html -u /usr/share/doc/python-numpy-doc/html/genindex.html -u /usr/share/doc/python3-doc/html/genindex-all.html -u /usr/share/doc/python-matplotlib-doc/html/genindex.html
+;; add additional with
+;; ./pylookup -a -u /path/to/doch/html
