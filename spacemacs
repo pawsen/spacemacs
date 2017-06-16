@@ -337,8 +337,8 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  '
-  (defun my-line-copy ()
+
+  (defun my-line-copy()
     "Copy the line that point is on and move to the beginning of the next line.
     Consecutive calls to this command append each line to the
     kill-ring."
@@ -493,7 +493,7 @@ you should place your code here."
    ;;                          ("/INBOX"       . ?i)
    ;;                          ("/Sent"        . ?s))
 
-   mu4e-show-images t
+   mu4e-view-show-images t
    mu4e-view-image-max-width 800
    mu4e-html2text-command "w3m -T text/html"
    ;; for mbsync
@@ -519,69 +519,85 @@ you should place your code here."
      ;; pick first context automatically on launch
      mu4e-context-policy 'pick-first
      mu4e-contexts
-        `(
-          ,(make-mu4e-context
-            :name "gmail.com"
-            :match-func (lambda(msg)
-                          (when msg
-                            (mu4e-message-contact-field-matches msg :to "pawsen@gmail.com")))
-            :vars '(
-                    ;;(mu4e-get-mail-command . "mbsync -q gmail.com:inbox")
-                    (mu4e-get-mail-command . "mbsync -q gmail.com-inbox")
-                    (mu4e-sent-folder . "/gmail.com/Sent")
-                    (mu4e-drafts-folder . "/gmail.com/Drafts")
-                    (mu4e-trash-folder . "/archive-gmail.com/Trash")
-                    (mu4e-refile-folder . "/archive-gmail.com/Archive")
-                    ;;(mu4e-inbox-folder . "/gmail/Inbox")
-                    ;;(mu4e-sent-folder .  "/gmail/sent")
-                    ;;(mu4e-trash-folder . "/gmail/trash")
-                    ;; account details
-                    (user-mail-address . "pawsen@gmail.com")
-                    (user-full-name . "Paw")
-                    (mu4e-user-mail-address-list . ( "pawsen@gmail.com" ))
-                    ;;(mu4e-mu-home . "~/.mu-gmail")
-                    ;; gmail saves every outgoing message automatically
-                    (mu4e-sent-messages-behavior . delete)
-                    (mu4e-maildir-shortcuts . (("/gmail.com/INBOX" . ?j)
+     `(
+       ,(make-mu4e-context
+         :name "gmail.com"
+         :match-func (lambda(msg)
+                       (when msg
+                         (mu4e-message-contact-field-matches msg :to "pawsen@gmail.com")))
+         :vars '(
+                 ;;(mu4e-get-mail-command . "mbsync -q gmail.com:inbox")
+                 (mu4e-get-mail-command . "mbsync -q gmail.com-inbox")
+                 (mu4e-sent-folder . "/gmail.com/Sent")
+                 (mu4e-drafts-folder . "/gmail.com/Drafts")
+                 (mu4e-trash-folder . "/archive-gmail.com/Trash")
+                 (mu4e-refile-folder . "/archive-gmail.com/Archive")
+                 ;;(mu4e-inbox-folder . "/gmail/Inbox")
+                 ;;(mu4e-sent-folder .  "/gmail/sent")
+                 ;;(mu4e-trash-folder . "/gmail/trash")
+                 ;; account details
+                 (user-mail-address . "pawsen@gmail.com")
+                 (user-full-name . "Paw")
+                 (mu4e-user-mail-address-list . ( "pawsen@gmail.com" ))
+                 ;;(mu4e-mu-home . "~/.mu-gmail")
+                 ;; gmail saves every outgoing message automatically
+                 (mu4e-sent-messages-behavior . delete)
+                 (mu4e-maildir-shortcuts . (("/gmail.com/INBOX" . ?j)
                                         ;("/gmai/.All Mail" . ?a)
-                                               ("/archive-gmail.com/Trash" . ?t)
-                                               ("/gmail.com/Drafts" . ?d)))
-                    ;; (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
-                    ;;                            ("/gmail/all" . ?a)
-                    ;;                            ("/gmail/trash" . ?t)
-                    ;;                            ("/gmail/drafts" . ?d)))
-                    ;; outbound mail server
-                    (smtpmail-smtp-server . "smtp.gmail.com")
-                    (smtpmail-smtp-service . 465)
-                    (smtpmail-stream-type . ssl)
-                    ;; the All Mail folder has a copy of every other folder's
-                    ;; contents, and duplicates search results, which is confusing
-                    (mue4e-headers-skip-duplicates . t)
-                    ))
-          ,(make-mu4e-context
-            :name "dtu"
-            :match-func (lambda(msg)
-                          (when msg
-                            (mu4e-message-contact-field-matches msg :to "s082705@student.dtu.dk")))
-            :vars '(
-                    (mu4e-sent-folder . "/dtu/Sent")
-                    (mu4e-drafts-folder . "/dtu/Drafts")
-                    (mu4e-trash-folder . "/dtu/Trash")
-                    (user-mail-address . "s082705@student.dtu.dk")
-                    (user-full-name . "Paw")
-                    ;;(mu4e-mu-home . "~/.mu-dtu")
-                    (mu4e-user-mail-address-list . ( "s082705@student.dtu.dk" ))
-                    (mu4e-get-mail-command . "mbsync -q dtu:Inbox")
-                    (mu4e-maildir-shortcuts . (("/dtu/Inbox" . ?j)
-                                               ;;("/dtu/all" . ?a)
-                                               ("/dtu/Trash" . ?t)
-                                               ("/dtu/Drafts" . ?d)))
-                    ;; outbound mail server
-                    (smtpmail-smtp-server . "smtp.student.dtu.dk")
-                    (smtpmail-smtp-service . 465)
-                    (smtpmail-stream-type . ssl)
-                    )))
-        ))
+                                            ("/archive-gmail.com/Trash" . ?t)
+                                            ("/gmail.com/Drafts" . ?d)))
+                 ;; (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
+                 ;;                            ("/gmail/all" . ?a)
+                 ;;                            ("/gmail/trash" . ?t)
+                 ;;                            ("/gmail/drafts" . ?d)))
+                 ;; outbound mail server
+                 (smtpmail-smtp-server . "smtp.gmail.com")
+                 (smtpmail-smtp-service . 465)
+                 (smtpmail-stream-type . ssl)
+                 ;; the All Mail folder has a copy of every other folder's
+                 ;; contents, and duplicates search results, which is confusing
+                 (mue4e-headers-skip-duplicates . t)
+                 ))
+       ,(make-mu4e-context
+         :name "dtu"
+         :match-func (lambda(msg)
+                       (when msg
+                         (mu4e-message-contact-field-matches msg :to "s082705@student.dtu.dk")))
+         :vars '(
+                 (mu4e-sent-folder . "/dtu/Sent")
+                 (mu4e-drafts-folder . "/dtu/Drafts")
+                 (mu4e-trash-folder . "/dtu/Trash")
+                 (user-mail-address . "s082705@student.dtu.dk")
+                 (user-full-name . "Paw")
+                 ;;(mu4e-mu-home . "~/.mu-dtu")
+                 (mu4e-user-mail-address-list . ( "s082705@student.dtu.dk" ))
+                 (mu4e-get-mail-command . "mbsync -q dtu:Inbox")
+                 (mu4e-maildir-shortcuts . (("/dtu/Inbox" . ?j)
+                                            ;;("/dtu/all" . ?a)
+                                            ("/dtu/Trash" . ?t)
+                                            ("/dtu/Drafts" . ?d)))
+                 ;; outbound mail server
+                 (smtpmail-smtp-server . "smtp.student.dtu.dk")
+                 (smtpmail-smtp-service . 465)
+                 (smtpmail-stream-type . ssl)
+                 ))))
+
+    ;; Add printing to list of actions:
+    ;; See function  mu4e-action-view-as-pdf, L54 in mu4e-actions.el
+    ;; This is just an example of some broken lines. Does not work
+    ;; (add-to-list 'mu4e-view-actions
+    ;;              `("Print" .
+    ;;                ,(defun mu4e-action-print (msg)
+    ;;                   "Print the message using muttprint."
+    ;;                   (shell-command-to-string
+    ;;                    (concat "cat "
+    ;;                     (shell-quote-argument (mu4e-message-field msg :path)) " >> /home/paw/msg2.txt"))
+    ;;                   ;(ps-print-buffer-with-faces (buffer-file-name (mu4e-action-view-as-pdf msg)))
+    ;;                   (ps-spool-buffer-with-faces (mu4e-action-view-as-pdf msg))
+    ;;                   ;(mu4e-view-pipe (mu4e-action-view-as-pdf msg))
+    ;;                   ;;(mu4e-view-pipe ">> /home/paw/msg.txt")
+    ;;                   )))
+    )
 
 
   (defun my/mu4e-org-compose ()
@@ -603,7 +619,9 @@ you should place your code here."
   ;; dont include my Drafts in recent files
   (with-eval-after-load 'recentf-exclude
     (add-to-list 'recentf-exclude
-                 (expand-file-name "~/\\.mail/\\(.*\\)/Drafts/\\.*" ))
+                 '((expand-file-name "~/\\.mail/\\(.*\\)/Drafts/\\.*" )
+                   "/tmp\\.*"
+                   ))
     )
 
   )
@@ -616,7 +634,10 @@ you should place your code here."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(evil-want-Y-yank-to-eol nil)
+ '(package-selected-packages
+   (quote
+    (winum unfill pdf-tools tablist powerline spinner key-chord ivy org ht alert log4e gntp markdown-mode skewer-mode simple-httpd json-snatcher json-reformat multiple-cursors js2-mode hydra parent-mode projectile request helm-bibtex parsebib haml-mode gitignore-mode fringe-helper git-gutter+ git-gutter flyspell-correct pos-tip flycheck pkg-info epl flx magit magit-popup git-commit with-editor smartparens iedit anzu evil goto-chg undo-tree highlight php-mode diminish web-completion-data dash-functional tern company bind-map bind-key biblio biblio-core yasnippet packed auctex anaconda-mode pythonic f dash s helm avy helm-core async auto-complete popup package-build yapfify ws-butler window-numbering which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org tagedit systemd spacemacs-theme spaceline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox orgit org-ref org-projectile org-present org-pomodoro org-plus-contrib org-download org-bullets open-junk-file neotree mwim mu4e-maildirs-extension mu4e-alert move-text monokai-theme mmm-mode markdown-toc magit-gitflow macrostep lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc insert-shebang info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md flyspell-correct-helm flycheck-pos-tip flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav dumb-jump drupal-mode disaster diff-hl define-word cython-mode company-web company-tern company-statistics company-shell company-c-headers company-auctex company-anaconda column-enforce-mode coffee-mode cmake-mode clean-aindent-mode clang-format auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
