@@ -60,20 +60,18 @@ values."
      syntax-checking
      systemd
      (version-control :variables version-control-diff-tool 'diff-hl)
-
      mu4e
-
-
      ;; Personal config layers
      paw-python
      paw-func
+     paw-mu4e
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
-   '(helm-flycheck helm-ag multiple-cursors)
+   '(helm-flycheck guess-language helm-ag helm-mu multiple-cursors)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -338,6 +336,9 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
 
+  ;; Nice config:
+  ;; https://github.com/peterwvj/emacs.d/tree/master/lisp
+
   (defun my-line-copy()
     "Copy the line that point is on and move to the beginning of the next line.
     Consecutive calls to this command append each line to the
@@ -393,7 +394,7 @@ you should place your code here."
   (spacemacs|diminish spacemacs-whitespace-cleanup-mode)
 
   ;; Start all frames maximized
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
   ;; Miscellaneous
   (add-hook 'text-mode-hook 'auto-fill-mode)
@@ -451,181 +452,15 @@ you should place your code here."
   ;; (global-set-key (kbd "C-<") 'evil-mc-make-and-goto-prev-match)
   ;; (global-set-key (kbd "C->") 'evil-mc-make-and-goto-next-match)
 
-
-  ;; Maybe needed
-  ;; configure orgmode support in mu4e
-  ;;(require 'org-mu4e)
-  ;; when mail is sent, automatically convert org body to HTML
-  ;;(setq org-mu4e-convert-to-html t)
-
-
-  ;; mu4e tags support.
-  ;; https://gist.github.com/lgatto/7091552
-  (setq
-   ;; https://cpbotha.net/2016/09/27/thunderbird-support-of-rfc-3676-formatflowed-is-half-broken/
-   mu4e-compose-format-flowed t
-   ;; set mu4e as default mail client
-   mail-user-agent 'mu4e-user-agent
-   ;; root mail directory - can't be switched
-   ;; with context, can only be set once
-   mu4e-maildir "~/.mail"
-   mu4e-attachments-dir "~/Downloads/Attachments"
-   ;; update command
-   ;;mu4e-get-mail-command "mbsync -q -a"
-
-   org-mu4e-convert-to-html t
-   ;; mu4e-get-mail-command "mbsync -q dtu:Inbox gmail:Inbox"
-   ;; update database every seven minutes
-   mu4e-update-interval (* 60 7)
-   ;; use smtpmail (bundled with emacs) for sending
-   message-send-mail-function 'smtpmail-send-it
-   ;; optionally log smtp output to a buffer
-   smtpmail-debug-info t
-   ;; close sent message buffers
-   message-kill-buffer-on-exit t
-   ;; customize list columns
-   mu4e-headers-fields '((:flags . 4)
-                         (:from . 20)
-                         (:human-date . 10)
-                         (:subject))
-   mu4e-view-show-addresses t
-   ;; mu4e-maildir-shortcuTs '(("/Archive"     . ?a)
-   ;;                          ("/INBOX"       . ?i)
-   ;;                          ("/Sent"        . ?s))
-
-   mu4e-view-show-images t
-   mu4e-view-image-max-width 800
-   mu4e-html2text-command "w3m -T text/html"
-   ;; for mbsync
-   mu4e-change-filenames-when-moving t
-   mu4e-confirm-quit                 nil
-   )
-
-  ;; In mu4e, deleting [d] a file will not only move the file to the Trash, but
-  ;; it will also set the trashed flag; thus servers are likely to delete them
-  ;; automatically. The following binds the d key to just the move action.
-  ;; (fset 'mu4e-move-to-trash "mt")
-  ;; (define-key mu4e-headers-mode-map (kbd "d") 'mu4e-move-to-trash)
-  ;; (define-key mu4e-view-mode-map (kbd "d") 'mu4e-move-to-trash)
-
-  ;; use org structures and tables in message mode
-  (add-hook 'message-mode-hook 'turn-on-orgtbl)
-  (add-hook 'message-mode-hook 'turn-on-orgstruct++)
-  (with-eval-after-load 'mu4e
-    ;; mu4e context for each IMAP Account
-    (setq
-     ;; if nil: use current context for new mail
-     mu4e-compose-context-policy 'ask-if-none
-     ;; pick first context automatically on launch
-     mu4e-context-policy 'pick-first
-     mu4e-contexts
-     `(
-       ,(make-mu4e-context
-         :name "gmail.com"
-         :match-func (lambda(msg)
-                       (when msg
-                         (mu4e-message-contact-field-matches msg :to "pawsen@gmail.com")))
-         :vars '(
-                 ;;(mu4e-get-mail-command . "mbsync -q gmail.com:inbox")
-                 (mu4e-get-mail-command . "mbsync -q gmail.com-inbox")
-                 (mu4e-sent-folder . "/gmail.com/Sent")
-                 (mu4e-drafts-folder . "/gmail.com/Drafts")
-                 (mu4e-trash-folder . "/archive-gmail.com/Trash")
-                 (mu4e-refile-folder . "/archive-gmail.com/Archive")
-                 ;;(mu4e-inbox-folder . "/gmail/Inbox")
-                 ;;(mu4e-sent-folder .  "/gmail/sent")
-                 ;;(mu4e-trash-folder . "/gmail/trash")
-                 ;; account details
-                 (user-mail-address . "pawsen@gmail.com")
-                 (user-full-name . "Paw")
-                 (mu4e-user-mail-address-list . ( "pawsen@gmail.com" ))
-                 ;;(mu4e-mu-home . "~/.mu-gmail")
-                 ;; gmail saves every outgoing message automatically
-                 (mu4e-sent-messages-behavior . delete)
-                 (mu4e-maildir-shortcuts . (("/gmail.com/INBOX" . ?j)
-                                        ;("/gmai/.All Mail" . ?a)
-                                            ("/archive-gmail.com/Trash" . ?t)
-                                            ("/gmail.com/Drafts" . ?d)))
-                 ;; (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
-                 ;;                            ("/gmail/all" . ?a)
-                 ;;                            ("/gmail/trash" . ?t)
-                 ;;                            ("/gmail/drafts" . ?d)))
-                 ;; outbound mail server
-                 (smtpmail-smtp-server . "smtp.gmail.com")
-                 (smtpmail-smtp-service . 465)
-                 (smtpmail-stream-type . ssl)
-                 ;; the All Mail folder has a copy of every other folder's
-                 ;; contents, and duplicates search results, which is confusing
-                 (mue4e-headers-skip-duplicates . t)
-                 ))
-       ,(make-mu4e-context
-         :name "dtu"
-         :match-func (lambda(msg)
-                       (when msg
-                         (mu4e-message-contact-field-matches msg :to "s082705@student.dtu.dk")))
-         :vars '(
-                 (mu4e-sent-folder . "/dtu/Sent")
-                 (mu4e-drafts-folder . "/dtu/Drafts")
-                 (mu4e-trash-folder . "/dtu/Trash")
-                 (user-mail-address . "s082705@student.dtu.dk")
-                 (user-full-name . "Paw")
-                 ;;(mu4e-mu-home . "~/.mu-dtu")
-                 (mu4e-user-mail-address-list . ( "s082705@student.dtu.dk" ))
-                 (mu4e-get-mail-command . "mbsync -q dtu:Inbox")
-                 (mu4e-maildir-shortcuts . (("/dtu/Inbox" . ?j)
-                                            ;;("/dtu/all" . ?a)
-                                            ("/dtu/Trash" . ?t)
-                                            ("/dtu/Drafts" . ?d)))
-                 ;; outbound mail server
-                 (smtpmail-smtp-server . "smtp.student.dtu.dk")
-                 (smtpmail-smtp-service . 465)
-                 (smtpmail-stream-type . ssl)
-                 ))))
-
-    ;; Add printing to list of actions:
-    ;; See function  mu4e-action-view-as-pdf, L54 in mu4e-actions.el
-    ;; This is just an example of some broken lines. Does not work
-    ;; (add-to-list 'mu4e-view-actions
-    ;;              `("Print" .
-    ;;                ,(defun mu4e-action-print (msg)
-    ;;                   "Print the message using muttprint."
-    ;;                   (shell-command-to-string
-    ;;                    (concat "cat "
-    ;;                     (shell-quote-argument (mu4e-message-field msg :path)) " >> /home/paw/msg2.txt"))
-    ;;                   ;(ps-print-buffer-with-faces (buffer-file-name (mu4e-action-view-as-pdf msg)))
-    ;;                   (ps-spool-buffer-with-faces (mu4e-action-view-as-pdf msg))
-    ;;                   ;(mu4e-view-pipe (mu4e-action-view-as-pdf msg))
-    ;;                   ;;(mu4e-view-pipe ">> /home/paw/msg.txt")
-    ;;                   )))
-    )
-
-
-  (defun my/mu4e-org-compose ()
-    "Switch to/from mu4e-compose-mode and org-mode"
-    (interactive)
-    ;;(if (not (boundp ‘kdm/mu4e-org-html-opt-done))
-    (let ((p (point)))
-      (goto-char (point-min))
-      (let ((case-fold-search t))
-        (when (not (search-forward "#+OPTIONS: tex:imagemagick" nil t))
-          (goto-char (point-max))
-          (insert "\n#+OPTIONS: tex:imagemagick\n#+OPTIONS: toc:0\n")))
-      (goto-char p))
-    (if (eq 'mu4e-compose-mode (buffer-local-value 'major-mode (current-buffer)))
-        (org~mu4e-mime-switch-headers-or-body)
-      (mu4e-compose-mode)))
-  ;;(global-set-key “\M-@” ‘my/mu4e-org-compose)
-  (define-key evil-emacs-state-map (kbd "M-@") 'my/mu4e-org-compose)
-  ;; dont include my Drafts in recent files
-  (with-eval-after-load 'recentf-exclude
-    (add-to-list 'recentf-exclude
-                 '((expand-file-name "~/\\.mail/\\(.*\\)/Drafts/\\.*" )
-                   "/tmp\\.*"
-                   ))
-    )
-
+  (use-package guess-language
+    :config
+    (setq guess-language-languages '(en da))
+    (setq guess-language-min-paragraph-length 35)
+    (setq guess-language-langcodes '((da "dansk" nil)
+                                     (en "en_GB" "English")))
+    (add-hook 'text-mode-hook (lambda () (guess-language-mode 1))))
   )
-;;)
+
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -637,10 +472,10 @@ you should place your code here."
  '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
    (quote
-    (winum unfill pdf-tools tablist powerline spinner key-chord ivy org ht alert log4e gntp markdown-mode skewer-mode simple-httpd json-snatcher json-reformat multiple-cursors js2-mode hydra parent-mode projectile request helm-bibtex parsebib haml-mode gitignore-mode fringe-helper git-gutter+ git-gutter flyspell-correct pos-tip flycheck pkg-info epl flx magit magit-popup git-commit with-editor smartparens iedit anzu evil goto-chg undo-tree highlight php-mode diminish web-completion-data dash-functional tern company bind-map bind-key biblio biblio-core yasnippet packed auctex anaconda-mode pythonic f dash s helm avy helm-core async auto-complete popup package-build yapfify ws-butler window-numbering which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package toc-org tagedit systemd spacemacs-theme spaceline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox orgit org-ref org-projectile org-present org-pomodoro org-plus-contrib org-download org-bullets open-junk-file neotree mwim mu4e-maildirs-extension mu4e-alert move-text monokai-theme mmm-mode markdown-toc magit-gitflow macrostep lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc insert-shebang info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md flyspell-correct-helm flycheck-pos-tip flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav dumb-jump drupal-mode disaster diff-hl define-word cython-mode company-web company-tern company-statistics company-shell company-c-headers company-auctex company-anaconda column-enforce-mode coffee-mode cmake-mode clean-aindent-mode clang-format auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell))))
+    (yapfify ws-butler winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org tagedit systemd spaceline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox orgit org-ref org-projectile org-present org-pomodoro org-download org-bullets open-junk-file neotree mwim mu4e-maildirs-extension mu4e-alert move-text monokai-theme mmm-mode markdown-toc magit-gitflow macrostep lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc insert-shebang info+ indent-guide hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mu helm-mode-manager helm-make helm-gitignore helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag guess-language google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav dumb-jump drupal-mode disaster diff-hl define-word cython-mode company-web company-tern company-statistics company-shell company-c-headers company-auctex company-anaconda column-enforce-mode coffee-mode cmake-mode clean-aindent-mode clang-format auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(default ((((class color) (min-colors 257)) (:foreground "#F8F8F2" :background "#272822")) (((class color) (min-colors 89)) (:foreground "#F5F5F5" :background "#1B1E1C")))))
