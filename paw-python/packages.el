@@ -13,6 +13,8 @@
     (define-key python-mode-map (kbd "C-c h") 'pylookup-lookup)
     (define-key python-mode-map (kbd "C-c f") 'anaconda-mode-show-doc)
 
+    (setq python-shell-interpreter "ipython3")
+
     ;;The history will be saved calling 'comint-send-eof' (usually C-c C-d).
     (add-hook 'inferior-python-mode-hook 'turn-on-comint-history)
     ;; save also with 'kill-this-buffer'
