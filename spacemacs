@@ -345,6 +345,7 @@ you should place your code here."
     kill-ring."
     (interactive)
     (if (eq mark-active t)
+
         (progn (mark) (kill-ring-save (region-beginning) (region-end)) (message "my-copy-region"))
       (let ((beg (point)); (line-beginning-position 1)) ; copy whole line instead
             (end (line-beginning-position 2)))
@@ -452,6 +453,20 @@ you should place your code here."
   ;; (global-set-key (kbd "C-<") 'evil-mc-make-and-goto-prev-match)
   ;; (global-set-key (kbd "C->") 'evil-mc-make-and-goto-next-match)
 
+  ;; additional settings for latex
+  (use-package tex
+    :ensure auctex
+    :config
+    ;; Generate sync file and sync with C-v
+    (eval-after-load
+        "tex" '(add-to-list 'TeX-command-list
+                            '("latexmk" "latexmk -pdf %t --synctex=1" TeX-run-TeX)))
+    (setq latex-run-command "pdflatex")
+    (setq LaTeX-command "latex --synctex=1")
+    (setq TeX-auto-save t
+          TeX-parse-self t
+          TeX-save-query nil)
+    )
   (use-package guess-language
     :config
     (setq guess-language-languages '(en da))
