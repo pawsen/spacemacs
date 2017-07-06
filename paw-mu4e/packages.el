@@ -30,7 +30,7 @@
        ;; root mail directory - can't be switched
        ;; with context, can only be set once
        mu4e-maildir "~/.mail"
-       mu4e-attachments-dir "~/Downloads"
+       mu4e-attachments-dir "~/Downloads/"
        ;; update command
        ;;mu4e-get-mail-command "mbsync -q -a"
 
