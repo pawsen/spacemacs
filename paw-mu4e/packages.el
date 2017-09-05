@@ -3,6 +3,7 @@
       '((mu4e :location site)
         helm-mu
         recentf
+        org-mime
         ;; org
         ;;mu4e-maildirs-extension
         )
@@ -30,7 +31,7 @@
        ;; root mail directory - can't be switched
        ;; with context, can only be set once
        mu4e-maildir "~/.mail"
-       mu4e-attachments-dir "~/Downloads/"
+       mu4e-attachments-dir "/home/paw/Downloads/attachment"
        ;; update command
        ;;mu4e-get-mail-command "mbsync -q -a"
 
@@ -195,6 +196,39 @@
     (define-key mu4e-view-mode-map "s" 'helm-mu)
     )
 )
+
+(defun paw-mu4e/init-helm-mu()
+   ;; Use helm for searching
+  (use-package org-mime
+    :defer t
+    :bind
+    (("C-c m" . helm-mu-contacts))
+    :config
+    (progn
+      (define-key mu4e-main-mode-map "s" 'helm-mu)
+      (define-key mu4e-headers-mode-map "s" 'helm-mu)
+      (define-key mu4e-view-mode-map "s" 'helm-mu)
+
+      (setq org-mime-library 'mml)
+      (setq org-mime-export-options '(:section-numbers nil
+                                      :with-author nil
+                                      :with-toc nil))
+      (defun htmlize-and-send ()
+        "When in an org-mu4e-compose-org-mode message, htmlize and send it."
+        (interactive)
+        (when (member 'org~mu4e-mime-switch-headers-or-body post-command-hook)
+          (org-mime-htmlize)
+          (message-send-and-exit)))
+
+      ;; (add-hook 'org-ctrl-c-ctrl-c-hook 'htmlize-and-send t)
+
+      (defun mu4e-compose-org-mail ()
+        (interactive)
+        (mu4e-compose-new)
+        (org-mu4e-compose-org-mode))
+      ) ; end of progn
+    )
+  )
 
 (defun paw-mu4e/post-init-recentf ()
   ;; dont include my Drafts in recent files
