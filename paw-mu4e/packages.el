@@ -3,7 +3,7 @@
       '((mu4e :location site)
         helm-mu
         recentf
-        org-mime
+        ;; (org-mime :location site)
         ;; org
         ;;mu4e-maildirs-extension
         )
@@ -197,18 +197,12 @@
     )
 )
 
-(defun paw-mu4e/init-helm-mu()
+(defun paw-mu4e/port-init-org-mime()
    ;; Use helm for searching
   (use-package org-mime
     :defer t
-    :bind
-    (("C-c m" . helm-mu-contacts))
     :config
     (progn
-      (define-key mu4e-main-mode-map "s" 'helm-mu)
-      (define-key mu4e-headers-mode-map "s" 'helm-mu)
-      (define-key mu4e-view-mode-map "s" 'helm-mu)
-
       (setq org-mime-library 'mml)
       (setq org-mime-export-options '(:section-numbers nil
                                       :with-author nil
