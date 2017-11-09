@@ -15,6 +15,9 @@
     (define-key python-mode-map (kbd "C-c f") 'anaconda-mode-show-doc)
 
     (setq python-shell-interpreter "ipython3")
+    ;; PYTHONPATH set in .zshrc only gets read when a shell starts; it won't
+    ;; affect Emacs. Instead, use setenv
+    (setenv "PYTHONPATH" (shell-command-to-string "$SHELL --login -c 'echo -n $PYTHONPATH'"))
 
     ;;The history will be saved calling 'comint-send-eof' (usually C-c C-d).
     (add-hook 'inferior-python-mode-hook 'turn-on-comint-history)
