@@ -1,7 +1,7 @@
 
 (setq paw-mu4e-packages
-      '((mu4e :location site)
-        helm-mu
+      '(
+        (mu4e :location site)
         recentf
         ;; (org-mime :location site)
         ;; org
@@ -11,32 +11,17 @@
 
 (defun paw-mu4e/post-init-mu4e ()
   (use-package mu4e
-    :if (and (eq system-type 'gnu/linux) (null noninteractive))
     :init
-    :bind (("<f2>" . mu4e))
-    :ensure f
-    :config
     (progn
-
-      ;; Invoke built-in completion but ignore the initial input
-      (defun paw/mu4e-completing-read (prompt collection &optional predicate require-match
-                                             initial-input hist def inherit-input-method)
-        (completing-read prompt collection predicate require-match nil hist def inherit-input-method))
-
       (setq
        ;; https://cpbotha.net/2016/09/27/thunderbird-support-of-rfc-3676-formatflowed-is-half-broken/
        mu4e-compose-format-flowed t
        ;; set mu4e as default mail client
        mail-user-agent 'mu4e-user-agent
-       ;; root mail directory - can't be switched
-       ;; with context, can only be set once
        mu4e-maildir "~/.mail"
-       mu4e-attachments-dir "/home/paw/Downloads/attachment"
-       ;; update command
        ;;mu4e-get-mail-command "mbsync -q -a"
 
        org-mu4e-convert-to-html t
-       ;; mu4e-get-mail-command "mbsync -q dtu:Inbox gmail:Inbox"
        ;; update database every seven minutes
        mu4e-update-interval (* 60 7)
        ;; use smtpmail (bundled with emacs) for sending
@@ -56,47 +41,47 @@
        mu4e-view-prefer-html t
        mu4e-use-fancy-chars t
        mu4e-view-image-max-width 800
-       mu4e-html2text-command "w3m -T text/html"
+       mu4e-html2text-command "iconv -c -t utf-8 | pandoc -f html -t plain"
        ;; for mbsync
        mu4e-change-filenames-when-moving t
        mu4e-confirm-quit nil
-
-       ;; Use helm completion (rather than ido) and ignore the initial completion
-       ;; input
-       mu4e-completing-read-function 'paw/mu4e-completing-read
 
        ;; if nil: use current context for new mail
        mu4e-compose-context-policy 'ask-if-none
        ;; pick first context automatically on launch
        mu4e-context-policy 'pick-first
-       )
-
+       mu4e-use-maildirs-extension 't
+       ))
+    :bind (("<f2>" . mu4e))
+    :ensure f
+    :config
+    (progn
       ;; mu4e context for each IMAP Account
       (setq
        mu4e-contexts
        `(
          ,(make-mu4e-context
-           :name "gmail.com"
+           :name "gmail"
            :match-func (lambda(msg)
                          (when msg
                            (mu4e-message-contact-field-matches msg :to "pawsen@gmail.com")))
            :vars '(
                    ;;(mu4e-get-mail-command . "mbsync -q gmail.com:inbox")
-                   (mu4e-get-mail-command . "mbsync -q gmail.com-inbox")
-                   (mu4e-sent-folder . "/gmail.com/Sent")
-                   (mu4e-drafts-folder . "/gmail.com/Drafts")
-                   (mu4e-trash-folder . "/archive-gmail.com/Trash")
-                   (mu4e-refile-folder . "/archive-gmail.com/Archive")
+                   (mu4e-get-mail-command . "mbsync -q gmail")
+                   (mu4e-sent-folder . "/gmail/Sent")
+                   (mu4e-drafts-folder . "/gmail/Drafts")
+                   (mu4e-trash-folder . "/gmail/Trash")
+                   ;;(mu4e-refile-folder . "/gmail/Archive")
                    ;; account details
                    (user-mail-address . "pawsen@gmail.com")
-                   (user-full-name . "Paw")
+                   (user-full-name . "Paw Møller")
                    (mu4e-user-mail-address-list . ( "pawsen@gmail.com" ))
                    ;; gmail saves every outgoing message automatically
                    (mu4e-sent-messages-behavior . delete)
-                   (mu4e-maildir-shortcuts . (("/gmail.com/INBOX" . ?j)
-                                        ;("/gmai/.All Mail" . ?a)
-                                              ("/archive-gmail.com/Trash" . ?t)
-                                              ("/gmail.com/Drafts" . ?d)))
+                   (mu4e-maildir-shortcuts . (("/gmail/Inbox" . ?j)
+                                              ("/gmail/Liege" . ?l)
+                                              ("/gmail/Trash" . ?t)
+                                              ("/gmail/Drafts" . ?d)))
                    ;; outbound mail server
                    ;; need gnutls-bin package. ~/.authinfo have the content:
                    ;; machine imap.gmail.com login EMAIL@gmail.com password PASSWORD
@@ -110,26 +95,25 @@
                    (mue4e-headers-skip-duplicates . t)
                    ))
          ,(make-mu4e-context
-           :name "dtu"
+           :name "ulg"
            :match-func (lambda(msg)
                          (when msg
-                           (mu4e-message-contact-field-matches msg :to "s082705@student.dtu.dk")))
+                           (mu4e-message-contact-field-matches msg :to "pmoller@uliege.be")))
            :vars '(
-                   (mu4e-sent-folder . "/dtu/Sent")
-                   (mu4e-drafts-folder . "/dtu/Drafts")
-                   (mu4e-trash-folder . "/dtu/Trash")
-                   (user-mail-address . "s082705@student.dtu.dk")
-                   (user-full-name . "Paw")
-                   ;;(mu4e-mu-home . "~/.mu-dtu")
-                   (mu4e-user-mail-address-list . ( "s082705@student.dtu.dk" ))
-                   (mu4e-get-mail-command . "mbsync -q dtu:Inbox")
-                   (mu4e-maildir-shortcuts . (("/dtu/Inbox" . ?j)
+                   (mu4e-sent-folder . "/ulg/Sent")
+                   (mu4e-drafts-folder . "/ulg/Drafts")
+                   (mu4e-trash-folder . "/ulg/Trash")
+                   (user-mail-address . "pmoller@uliege.be")
+                   (user-full-name . "Paw Møller")
+                   (mu4e-user-mail-address-list . ("pmoller@uliege.be"))
+                   (mu4e-get-mail-command . "mbsync -q ulg")
+                   (mu4e-maildir-shortcuts . (("/ulg/Inbox" . ?j)
                                               ;;("/dtu/all" . ?a)
-                                              ("/dtu/Trash" . ?t)
-                                              ("/dtu/Drafts" . ?d)))
+                                              ("/ulg/Trash" . ?t)
+                                              ("/ulg/Drafts" . ?d)))
                    (smtpmail-stream-type . starttls)
-                   (smtpmail-default-smtp-server . "smtp.office365.com")
-                   (smtpmail-smtp-server . "smtp.office365.com")
+                   (smtpmail-default-smtp-server . "smtp.ulg.ac.be")
+                   (smtpmail-smtp-server . "smtp.ulg.ac.be")
                    (smtpmail-smtp-service . 587)
                    ))
          ))
@@ -145,6 +129,9 @@
       (add-hook 'message-mode-hook 'turn-on-orgtbl)
       (add-hook 'message-mode-hook 'turn-on-orgstruct++)
 
+      (add-hook 'mu4e-view-mode-hook #'visual-line-mode)
+      (add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
+      (add-to-list 'mu4e-view-actions '("view in browser" . mu4e-action-view-in-browser))
       ;; C-c C-a	` attach a file (pro-tip: drag & drop works as well)
       ;; Check for supposed attachments prior to sending an email
       ;; Inspired by https://github.com/munen/emacs.d
@@ -183,19 +170,15 @@
     ); end of use package
   ); end of defun
 
-
-(defun paw-mu4e/init-helm-mu()
-   ;; Use helm for searching
-  (use-package helm-mu
-    :defer t
-    :bind
-    (("C-c m" . helm-mu-contacts))
-    :config
-    (define-key mu4e-main-mode-map "s" 'helm-mu)
-    (define-key mu4e-headers-mode-map "s" 'helm-mu)
-    (define-key mu4e-view-mode-map "s" 'helm-mu)
-    )
-)
+;;  This could be useful for syncing of all mails instead of the inbox + labels
+;; I now don't have an =INBOX= as such instead I've defined a few handy bookmarks
+;; mu4e-bookmarks `(("\\\\Inbox" "Inbox" ?i)
+;;                  ("flag:flagged" "Flagged messages" ?f)
+;;                  (,(concat "flag:unread AND "
+;;                            "NOT flag:trashed AND "
+;;                            "NOT maildir:/[Gmail].Spam AND "
+;;                            "NOT maildir:/[Gmail].Bin")
+;;                   "Unread messages" ?u))
 
 (defun paw-mu4e/port-init-org-mime()
    ;; Use helm for searching
@@ -226,15 +209,16 @@
 
 (defun paw-mu4e/post-init-recentf ()
   ;; dont include my Drafts in recent files
+  ;; run M-x recentf-cleanup to make it work
   (use-package recentf
-    :defer t
+    :defer
     :config
     ;;(with-eval-after-load 'recentf-exclude
+    (progn
     (add-to-list 'recentf-exclude
-               '((expand-file-name "~/\\.mail/\\(.*\\)/Drafts/\\.*" )
-                 "/tmp\\.*"
-                 ))
-    )
+                 (recentf-expand-file-name "~/\\.mail/\\(.*\\)/Drafts/" ))
+    (add-to-list 'recentf-exclude "/tmp/")
+    ))
   )
 
 
