@@ -36,31 +36,35 @@ values."
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     auto-completion
+     ;; auto-completion
+            (auto-completion :variables auto-completion-enable-sort-by-usage t auto-completion-enable-snippets-in-popup nil spacemacs-default-company-backends
+                             '(company-capf
+                               (company-dabbrev-code company-keywords)
+                               company-files company-dabbrev))
+     latex
      bibtex
-     (c-c++ :variables c-c++-enable-clang-support t)
+     ;;(c-c++ :variables c-c++-enable-clang-support t)
      better-defaults
+     spacemacs-layouts
      emacs-lisp
      octave
      git
      helm
      html
      javascript
-     latex
      lua
      markdown
      org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
-     php
+     (shell :variables shell-default-shell 'eshell shell-default-height 30 shell-default-position 'bottom)
      python
      shell-scripts
      spell-checking
-     syntax-checking
+     (syntax-checking :variables syntax-checking-enable-tooltips t)
      systemd
+     spacemacs-language
      (version-control :variables version-control-diff-tool 'diff-hl)
-     mu4e
+     (mu4e :variables mu4e-enable-async-operations 'nil)
+     ;;doom-modeline
      ;; Personal config layers
      paw-python
      paw-func
@@ -71,7 +75,8 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
-   '(helm-flycheck guess-language helm-ag helm-mu multiple-cursors)
+   '(helm-flycheck helm-ag helm-mu multiple-cursors)
+   ;; google-translate google-translate-default-ui google-translate-smooth-ui)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -301,6 +306,9 @@ values."
    ;; delete only whitespace for changed lines or `nil' to disable cleanup.
    ;; (default nil)
    dotspacemacs-whitespace-cleanup 'changed
+   dotspacemacs-mode-line-theme 'spacemacs
+
+   dotspacemacs-frame-title-format "%a %f"
    ))
 
 (defun dotspacemacs/user-init ()
@@ -325,10 +333,10 @@ before packages are loaded. If you are unsure, you should try in setting them in
 
   ;; Shell
   ;; shell-default-term-shell "/bin/zsh"
-  (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+  (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
   (setq-default dotspacemacs-configuration-layers
                 '((mu4e :variables
-                        mu4e-installation-path "/usr/share/emacs/site-lisp")))
+                        mu4e-installation-path "/usr/local/share/emacs/site-lisp")))
   )
 
 (defun dotspacemacs/user-config ()
@@ -389,7 +397,7 @@ you should place your code here."
                 (message "No Compilation Errors")))))
 
   ;; Stop python from complaining when opening a REPL
-  (setq python-shell-prompt-detect-failure-warning nil)
+  ;;(setq python-shell-prompt-detect-failure-warning nil)
 
   ;; No need for these in the modeline
   (spacemacs|diminish ggtags-mode)
@@ -403,6 +411,7 @@ you should place your code here."
   ;; Miscellaneous
   (add-hook 'text-mode-hook 'auto-fill-mode)
   (add-hook 'python-mode-hook 'auto-fill-mode)
+  (setenv "PYTHONPATH" "/home/paw/src/vib")
 
   ;; (define-key evil-normal-state-map (kbd "C-j")
   (define-key evil-emacs-state-map (kbd "C-j")
@@ -475,15 +484,58 @@ you should place your code here."
           "%`%l -shell-escape %(mode)%' %t")
     )
 
+
+  (use-package google-translate
+    :ensure
+    :config
+    (progn
+      (setq
+       google-translate-default-target-language "en"
+       google-translate-default-source-language "fr"
+       ;; contain translation directions.
+       google-translate-translation-directions-alist
+       '(("fr" . "en") ("en" . "fr"))
+       ))
+    )
+
+  ;; Magic advice to rename entries in recentf when moving files in dired.
+  ;; https://www.emacswiki.org/emacs/RecentFiles#toc22
+  (defun rjs/recentf-rename-notify (oldname newname &rest args)
+    (if (file-directory-p newname)
+        (rjs/recentf-rename-directory oldname newname)
+      (rjs/recentf-rename-file oldname newname)))
+
+  (defun rjs/recentf-rename-file (oldname newname)
+    (setq recentf-list
+          (mapcar (lambda (name)
+                    (if (string-equal name oldname)
+                        newname
+                      oldname))
+                  recentf-list)))
+
+  (defun rjs/recentf-rename-directory (oldname newname)
+    ;; oldname, newname and all entries of recentf-list should already be
+    ;; absolute and normalised so I think this can just test whether oldname is
+    ;; a prefix of the element.
+    (setq recentf-list
+          (mapcar (lambda (name)
+                    (if (string-prefix-p oldname name)
+                        (concat newname (substring name (length oldname)))
+                      name))
+                  recentf-list)))
+
+  (advice-add 'dired-rename-file :after #'rjs/recentf-rename-notify)
+
+
   (setq bibtex-completion-bibliography
       '("/home/paw/ownCloud/speciale/report/biblio.bib"))
-  (use-package guess-language
-    :config
-    (setq guess-language-languages '(en da))
-    (setq guess-language-min-paragraph-length 35)
-    (setq guess-language-langcodes '((da "dansk" nil)
-                                     (en "en_GB" "English")))
-    (add-hook 'text-mode-hook (lambda () (guess-language-mode 1))))
+  ;; (use-package guess-language
+  ;;   :config
+  ;;   (setq guess-language-languages '(en da))
+  ;;   (setq guess-language-min-paragraph-length 35)
+  ;;   (setq guess-language-langcodes '((da "dansk" nil)
+  ;;                                    (en "en_GB" "English")))
+  ;;   (add-hook 'text-mode-hook (lambda () (guess-language-mode 1))))
 
   (defun toggle-window-split ()
     ; toggle between horisontal and vertical split.
@@ -526,11 +578,12 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
    (quote
-    (keychain-environment zenburn-theme symon string-inflection password-generator org-brain impatient-mode helm-purpose window-purpose imenu-list flycheck-bashate evil-org evil-lion editorconfig company-php ac-php-core xcscope company-lua cmake-ide levenshtein browse-at-remote yapfify ws-butler winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org tagedit systemd spaceline smeargle slim-mode scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode popwin pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode pcre2el paradox orgit org-ref org-projectile org-present org-pomodoro org-download org-bullets open-junk-file neotree mwim mu4e-maildirs-extension mu4e-alert move-text monokai-theme mmm-mode markdown-toc magit-gitflow macrostep lua-mode lorem-ipsum livid-mode live-py-mode linum-relative link-hint less-css-mode json-mode js2-refactor js-doc insert-shebang info+ indent-guide hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mu helm-mode-manager helm-make helm-gitignore helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag guess-language google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md fuzzy flyspell-correct-helm flycheck-pos-tip flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu emmet-mode elisp-slime-nav dumb-jump drupal-mode disaster diff-hl define-word cython-mode company-web company-tern company-statistics company-shell company-c-headers company-auctex company-anaconda column-enforce-mode coffee-mode cmake-mode clean-aindent-mode clang-format auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line ac-ispell))))
+    (realgud test-simple loc-changes load-relative zenburn-theme yasnippet-snippets yapfify xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package unfill toc-org tagedit systemd symon string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pyvenv pytest pyenv-mode py-isort pug-mode prettier-js popwin pippel pipenv pip-requirements persp-mode pcre2el password-generator paradox overseer orgit org-ref org-projectile org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file neotree nameless mwim multi-term mu4e-maildirs-extension mu4e-alert move-text monokai-theme mmm-mode markdown-toc magit-svn magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc insert-shebang indent-guide importmagic impatient-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org-rifle helm-mu helm-mode-manager helm-make helm-gitignore helm-git-grep helm-flycheck helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe git-gutter-fringe+ gh-md fuzzy font-lock+ flyspell-correct-helm flycheck-pos-tip flycheck-bashate flx-ido fish-mode fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish diff-hl define-word cython-mode counsel-projectile company-web company-tern company-statistics company-shell company-lua company-auctex company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-dictionary auto-compile auctex-latexmk aggressive-indent ace-window ace-link ace-jump-helm-line ac-ispell)))
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((((class color) (min-colors 257)) (:foreground "#F8F8F2" :background "#272822")) (((class color) (min-colors 89)) (:foreground "#F5F5F5" :background "#1B1E1C")))))
+ )
 )

@@ -100,6 +100,7 @@
                          (when msg
                            (mu4e-message-contact-field-matches msg :to "pmoller@uliege.be")))
            :vars '(
+                   (mu4e-sent-messages-behavior . sent)
                    (mu4e-sent-folder . "/ulg/Sent")
                    (mu4e-drafts-folder . "/ulg/Drafts")
                    (mu4e-trash-folder . "/ulg/Trash")
@@ -220,6 +221,21 @@
     (add-to-list 'recentf-exclude "/tmp/")
     ))
   )
+
+;; (defun my-mu4e-sent-folder-function (msg)
+;;   "Set the sent folder for the current message."
+;;   (let ((from-address (message-field-value "From"))
+;;         (to-address (message-field-value "To")))
+;;     (cond
+;;      ((string-match "my.address@account1.example.com" from-address)
+;;       (if (member* to-address my-mu4e-mailing-lists
+;;                    :test #'(lambda (x y)
+;;                              (string-match (car y) x)))
+;;           "/Trash"
+;;         "/Account1/Sent"))
+;;      ((string-match "my.address@gmail.com" from-address)
+;;       "/Gmail/Sent Mail")
+;;      (t (mu4e-ask-maildir-check-exists "Save message to maildir: ")))))
 
 
 ;; In mu4e, deleting [d] a file will not only move the file to the Trash, but
